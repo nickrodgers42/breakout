@@ -1,5 +1,0 @@
-model_checkpoint_path: "model"
-all_model_checkpoint_paths: "../net500/model"
-all_model_checkpoint_paths: "../net1000/model"
-all_model_checkpoint_paths: "../net1500/model"
-all_model_checkpoint_paths: "model"
