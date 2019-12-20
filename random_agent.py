@@ -9,7 +9,7 @@ def random_agent():
         while True:
             env.render()
             action = env.action_space.sample()
-            state, reward, gameover, lives = env.step(action)
+            gameover = env.step(action)[2]
             if gameover:
                 break
             time.sleep(1/30)

@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 class Model():
     def __init__(self, input_shape=[None, 84, 84, 4], num_outputs=4, learning_rate=0.0001):
@@ -111,3 +112,35 @@ class Model():
         )
         self._optimizer = tf.train.AdamOptimizer(learning_rate=self._learning_rate)
         self._update = self._optimizer.minimize(self._loss)
+
+    def _reshape_states(self, states):
+        return np.reshape(
+            states,
+            (
+                -1, 
+                self._input_shape[1],
+                self._input_shape[2],
+                self._input_shape[3]
+            )
+        )
+
+    def get_best_action(self, session, state):
+        state = self._reshape_states(state)
+        return session.run(self._best_action, feed_dict={self._input_layer: state})
+    
+    def get_q_values(self, session, states):
+        states = self._reshape_states(states)
+        return session.run(self._q_values, feed_dict={self._input_layer: states})
+    
+    def train(self, session, states, target_q, actions):
+        states = self._reshape_states(states)
+        return session.run(
+            [
+                self._loss, 
+                self._update
+            ], 
+            feed_dict={
+                self._input_layer: states,
+                self._target_q: target_q,
+                self._action: actions
+            })

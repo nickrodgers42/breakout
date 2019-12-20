@@ -53,10 +53,11 @@ class ReplayMemory():
 
             range_valid = True
             for i in range(start, end):
-                circularIndex = i % self._max_size
-                if self._gameovers[circularIndex]:
+                circular_index = i % self._max_size
+                if self._gameovers[circular_index]:
                     range_valid = False
-                    invalid_indices.append(start) if start not in invalid_indices else None
+                    if start not in invalid_indices:
+                        invalid_indices.append(start)
                     break
             if range_valid:
                 valid_indices.append((end % self._max_size) - 1)
@@ -67,10 +68,8 @@ class ReplayMemory():
         start = index - self._frame_buff_size + 1
         frame_stack = []
         for i in range(start, start + self._frame_buff_size):
-            circularIndex = i % self._max_size
-            print(f'Index: {circularIndex}')
-            frame_stack.append(self._frames[circularIndex])
-        print(len(frame_stack))
+            circular_index = i % self._max_size
+            frame_stack.append(self._frames[circular_index])
         frame_stack = np.dstack(frame_stack)
         return frame_stack
 
@@ -86,7 +85,8 @@ class ReplayMemory():
             action = self._actions[i]
             reward = self._rewards[i]
             next_frame = self._frames[i + 1]
-            memories.append((state, action, reward, next_frame))
+            gameover = self._gameovers[i + 1]
+            memories.append((state, action, reward, next_frame, gameover))
         
         return memories
 
