@@ -64,6 +64,8 @@ class Breakout():
         self._steps = 0
         self._total_reward = 0
         self._total_loss = 0
+        
+        self._saver = tf.train.Saver()
 
     def _fill_memory(self):
         while self._memory.size < self._memory_start_size:
@@ -109,6 +111,17 @@ class Breakout():
         state.pop(0)
         return np.dstack(state)
 
+    def _play_choose_action(self):
+        state = np.dstack(self._state,)
+        if random.random() < 0.1:
+            return self._env.action_space.sample()
+        action = self._main_dqn.get_best_action(
+            self._session,
+            state
+        )[0]
+        print(f'Action: {action}')
+        return action
+
     def _choose_action(self):
         self._epsilon = self._slope * self._steps + self._max_epsilon
         self._epsilon = max(self._epsilon, self._min_epsilon)
@@ -121,6 +134,30 @@ class Breakout():
         )[0]
         # print(f'Action: {action}')
         return action
+
+    def play(self):
+        self._reset_game_state()
+        # if self._memory.size < self._memory_start_size:
+        #     self._fill_memory()
+        while True:
+            if self._render:
+                self._env.render()
+            action = self._play_choose_action()
+            frame, reward, gameover, _ = self._env.step(action)
+            time.sleep(1/30)
+            frame = self._fp.preprocess(frame)
+            self._update_game_state(frame)
+            reward = np.sign(reward)
+            
+            self._steps += 1
+            self._episode_length += 1
+            self._total_reward += reward
+            self._print_training_status()
+            
+            if gameover or self._episode_length > self._max_episode_length:
+                break
+        print()
+        return self._total_reward
 
     def train(self):
         self._reset_game_state()
@@ -194,14 +231,11 @@ class Breakout():
         for op in update_ops:
             self._session.run(op)
 
-    def play(self):
-        pass
-    
-    def save(self):
-        pass
+    def load(self, dir_path):
+        self._saver.restore(self._session, dir_path)
 
-    def load(self):
-        pass
+    def save(self, dir_path):
+        self._saver.save(self._session, dir_path)
 
     @property
     def steps(self):
