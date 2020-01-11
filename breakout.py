@@ -2,6 +2,8 @@ import gym
 import tensorflow as tf
 import random
 import numpy as np
+import os
+import json
 
 from replay_memory import ReplayMemory
 from frame_processor import FrameProcessor
@@ -56,6 +58,7 @@ class Breakout():
         self._min_epsilon = min_epsilon
         self._epsilon = self._max_epsilon
         self._slope = -(self._max_epsilon - self._min_epsilon) / self._memory_max_size
+        self._intercept = self._max_epsilon
         self._gamma = gamma
 
         self._state = []
@@ -123,8 +126,12 @@ class Breakout():
         return action
 
     def _choose_action(self):
-        self._epsilon = self._slope * self._steps + self._max_epsilon
+        self._epsilon = self._slope * self._steps + self._intercept
         self._epsilon = max(self._epsilon, self._min_epsilon)
+        if self._epsilon == self._min_epsilon and self._min_epsilon != 0:
+            self._slope = - self._min_epsilon / self._memory_max_size
+            self._intercept = self._min_epsilon - (self._slope * self._memory_max_size) 
+            self._min_epsilon = 0
         if random.random() < self._epsilon:
             return self._env.action_space.sample()
         state = np.dstack(self._state, )
@@ -144,7 +151,6 @@ class Breakout():
                 self._env.render()
             action = self._play_choose_action()
             frame, reward, gameover, _ = self._env.step(action)
-            time.sleep(1/30)
             frame = self._fp.preprocess(frame)
             self._update_game_state(frame)
             reward = np.sign(reward)
@@ -232,10 +238,18 @@ class Breakout():
             self._session.run(op)
 
     def load(self, dir_path):
-        self._saver.restore(self._session, dir_path)
+        self._saver.restore(self._session, dir_path + '/model')
+        with open(os.path.join(dir_path, 'breakoutCheckpoint.json')) as checkpoint:
+            self._steps = checkpoint['steps']
 
     def save(self, dir_path):
-        self._saver.save(self._session, dir_path)
+        self._saver.save(self._session, dir_path + '/model')
+        with open(os.path.join(dir_path, 'breakoutCheckpoint.json'), 'w') as output_file:
+            data = {
+                "steps": self._steps
+            }
+            json.dump(data, output_file)
+
 
     @property
     def steps(self):
