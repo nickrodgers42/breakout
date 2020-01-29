@@ -1,0 +1,6 @@
+model_checkpoint_path: "model"
+all_model_checkpoint_paths: "../net3000/model"
+all_model_checkpoint_paths: "../net3500/model"
+all_model_checkpoint_paths: "../net4000/model"
+all_model_checkpoint_paths: "../net4500/model"
+all_model_checkpoint_paths: "model"
