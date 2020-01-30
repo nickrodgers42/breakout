@@ -239,8 +239,9 @@ class Breakout():
 
     def load(self, dir_path):
         self._saver.restore(self._session, dir_path + '/model')
-        with open(os.path.join(dir_path, 'breakoutCheckpoint.json')) as checkpoint:
-            self._steps = checkpoint['steps']
+        with open(os.path.join(dir_path, 'breakoutCheckpoint.json'), 'r') as checkpoint:
+            data = json.load(checkpoint)
+            self._steps = data['steps']
 
     def save(self, dir_path):
         self._saver.save(self._session, dir_path + '/model')

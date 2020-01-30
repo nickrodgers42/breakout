@@ -93,5 +93,5 @@ def train_from_checkpoint():
         
 
 if __name__ == '__main__':
-    train_breakout()    
+    # train_breakout()    
     run_breakout()
